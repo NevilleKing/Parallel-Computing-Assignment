@@ -192,8 +192,12 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt" />
-    <Text Include="temp_lincolnshire.txt" />
-    <Text Include="temp_lincolnshire_short.txt" />
+    <Content Include="temp_lincolnshire.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="temp_lincolnshire_short.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
