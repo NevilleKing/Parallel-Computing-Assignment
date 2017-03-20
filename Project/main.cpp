@@ -1,6 +1,8 @@
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #define __CL_ENABLE_EXCEPTIONS
 
+#define ASSIGNMENT_FILENAME "blahblah"
+
 #include <iostream>
 #include <vector>
 
@@ -12,6 +14,8 @@
 
 #include "Utils.h"
 
+#include "ReadFile.h"
+
 void print_help() {
 	std::cerr << "Application usage:" << std::endl;
 
@@ -22,6 +26,18 @@ void print_help() {
 }
 
 int main(int argc, char **argv) {
+	// Read in file	
+	ReadFile myFile;
+	try 
+	{
+		myFile.Load(ASSIGNMENT_FILENAME);
+	}
+	catch (...)
+	{
+		return 1;
+	}
+
+
 	//Part 1 - handle command line options such as device selection, verbosity, etc.
 	int platform_id = 0;
 	int device_id = 0;

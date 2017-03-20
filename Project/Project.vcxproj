@@ -190,5 +190,10 @@
   <ItemGroup>
     <None Include="kernel.cl" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="readme.txt" />
+    <Text Include="temp_lincolnshire.txt" />
+    <Text Include="temp_lincolnshire_short.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
