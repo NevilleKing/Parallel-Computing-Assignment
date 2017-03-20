@@ -14,7 +14,12 @@
 
 #include "Utils.h"
 
+#include <chrono>
+
 #include "ReadFile.h"
+
+typedef std::chrono::high_resolution_clock Clock;
+typedef std::chrono::high_resolution_clock::time_point TimePoint;
 
 void print_help() {
 	std::cerr << "Application usage:" << std::endl;
@@ -26,6 +31,9 @@ void print_help() {
 }
 
 int main(int argc, char **argv) {
+
+	TimePoint startPoint = Clock::now();
+
 	// Read in file	
 	ReadFile myFile;
 	try 
@@ -36,6 +44,10 @@ int main(int argc, char **argv) {
 	{
 		return 1;
 	}
+
+	auto timeTaken = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startPoint).count();
+
+	std::cout << "Read & Parse (s): " << timeTaken / 1000.f << std::endl;
 
 
 	//Part 1 - handle command line options such as device selection, verbosity, etc.
