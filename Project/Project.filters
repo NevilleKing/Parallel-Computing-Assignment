@@ -9,7 +9,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="my_kernels3.cl">
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="kernel.cl">
       <Filter>OpenCL Files</Filter>
     </None>
   </ItemGroup>

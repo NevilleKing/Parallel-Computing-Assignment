@@ -31,6 +31,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8CB4B79A-8170-44DE-88DC-C73EACB44CB2}</ProjectGuid>
     <RootNamespace>Tutorial 1</RootNamespace>
+    <ProjectName>Project</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -176,16 +177,18 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ReadFile.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <Intel_OpenCL_Build_Rules Include="my_kernels.cl" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Tutorial 3.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ReadFile.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="my_kernels3.cl" />
+    <None Include="kernel.cl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

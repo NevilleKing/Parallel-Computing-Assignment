@@ -109,6 +109,8 @@ int main(int argc, char **argv) {
 		kernel_1.setArg(1, buffer_B);
 		kernel_1.setArg(2, (int)A.size()); // number of bins
 
+		/*
+
 		//call all kernels in a sequence
 		queue.enqueueNDRangeKernel(kernel_1, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size));
 
@@ -117,6 +119,9 @@ int main(int argc, char **argv) {
 
 		std::cout << "A = " << A << std::endl;
 		std::cout << "B = " << B << std::endl;
+
+		*/
+
 	}
 	catch (cl::Error err) {
 		std::cerr << "ERROR: " << err.what() << ", " << getErrorString(err.err()) << std::endl;
