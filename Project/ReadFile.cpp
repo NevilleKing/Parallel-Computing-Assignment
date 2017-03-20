@@ -29,8 +29,25 @@ void ReadFile::Load(std::string filename)
 	std::string line;
 	while (std::getline(thefile, line))
 	{
-		std::cout << line << std::endl;
+		_data->push_back(ParseLine(line));
 	}
 
 	thefile.close();
+}
+
+float ReadFile::ParseLine(std::string line)
+{
+	int numSpaces = 0;
+	int index = 0;
+	for (; index < line.length(); index++)
+	{
+		if (line[index] == ' ')
+			numSpaces++;
+		if (numSpaces == 5)
+			break;
+	}
+
+	index++;
+
+	return std::strtof(line.substr(index).c_str(), 0);
 }

@@ -15,4 +15,6 @@ public:
 	void Load(std::string filename);
 private:
 	std::vector<float>* _data;
+
+	float ParseLine(std::string line);
 };
