@@ -31,25 +31,6 @@ void print_help() {
 }
 
 int main(int argc, char **argv) {
-
-	TimePoint startPoint = Clock::now();
-
-	// Read in file	
-	ReadFile myFile;
-	try 
-	{
-		myFile.Load(ASSIGNMENT_FILENAME);
-	}
-	catch (...)
-	{
-		return 1;
-	}
-
-	auto timeTaken = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startPoint).count();
-
-	std::cout << "Read & Parse (s): " << timeTaken / 1000.f << std::endl;
-
-
 	//Part 1 - handle command line options such as device selection, verbosity, etc.
 	int platform_id = 0;
 	int device_id = 0;
@@ -102,16 +83,22 @@ int main(int argc, char **argv) {
 		//this makes the code more efficient
 		size_t local_size = 10;
 
-		size_t padding_size = A.size() % local_size;
+		TimePoint startPoint = Clock::now();
 
-		//if the input vector is not a multiple of the local_size
-		//insert additional neutral elements (0 for addition) so that the total will not be affected
-		if (padding_size) {
-			//create an extra vector with neutral values
-			std::vector<int> A_ext(local_size-padding_size, 0);
-			//append that extra vector to our input
-			A.insert(A.end(), A_ext.begin(), A_ext.end());
+		// Read in file	
+		ReadFile myFile;
+		try
+		{
+			myFile.Load(ASSIGNMENT_FILENAME, local_size);
 		}
+		catch (...)
+		{
+			return 1;
+		}
+
+		auto timeTaken = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startPoint).count();
+
+		std::cout << "Read & Parse (s): " << timeTaken / 1000.f << std::endl;
 
 		size_t input_elements = A.size();//number of input elements
 		size_t input_size = A.size()*sizeof(mytype);//size in bytes
@@ -128,7 +115,7 @@ int main(int argc, char **argv) {
 		//Part 5 - device operations
 
 		//5.1 copy array A to and initialise other arrays on device memory
-		queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, input_size, &A[0]);
+		queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, input_size, &myFile.GetData());
 		queue.enqueueFillBuffer(buffer_B, 0, 0, output_size);//zero B buffer on device memory
 
 		//5.2 Setup and execute all kernels (i.e. device code)
@@ -154,6 +141,8 @@ int main(int argc, char **argv) {
 	catch (cl::Error err) {
 		std::cerr << "ERROR: " << err.what() << ", " << getErrorString(err.err()) << std::endl;
 	}
+
+	system("pause");
 
 	return 0;
 }

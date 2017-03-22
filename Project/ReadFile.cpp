@@ -13,8 +13,13 @@ ReadFile::~ReadFile()
 
 void ReadFile::Load(std::string filename)
 {
+	Load(filename, 0);
+}
+
+void ReadFile::Load(std::string filename, size_t localSize)
+{
 	// create the data vector
-	_data = new std::vector<float>;
+	_data = new std::vector<int>;
 
 	std::ifstream thefile;
 	thefile.open(filename, std::ios::in);
@@ -33,6 +38,27 @@ void ReadFile::Load(std::string filename)
 	}
 
 	thefile.close();
+
+
+	// pad the vector if needed
+	if (localSize != 0)
+	{
+		size_t padding_size = _data->size() % localSize;
+
+		//if the input vector is not a multiple of the local_size
+		//insert additional neutral elements (0 for addition) so that the total will not be affected
+		if (padding_size) {
+			//create an extra vector with neutral values
+			std::vector<int> A_ext(localSize - padding_size, 0);
+			//append that extra vector to our input
+			_data->insert(_data->end(), A_ext.begin(), A_ext.end());
+		}
+	}
+}
+
+std::vector<int>& ReadFile::GetData()
+{
+	return *_data;
 }
 
 float ReadFile::ParseLine(std::string line)
@@ -49,5 +75,5 @@ float ReadFile::ParseLine(std::string line)
 
 	index++;
 
-	return std::strtof(line.substr(index).c_str(), 0);
+	return std::strtof(line.substr(index).c_str(), 0) * 100;
 }

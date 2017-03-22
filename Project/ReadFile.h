@@ -13,8 +13,11 @@ public:
 	~ReadFile();
 
 	void Load(std::string filename);
+	void Load(std::string filename, size_t localSize);
+
+	std::vector<int>& GetData();
 private:
-	std::vector<float>* _data;
+	std::vector<int>* _data;
 
 	float ParseLine(std::string line);
 };
