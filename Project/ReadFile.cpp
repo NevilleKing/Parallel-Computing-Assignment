@@ -61,6 +61,11 @@ std::vector<int>& ReadFile::GetData()
 	return *_data;
 }
 
+int ReadFile::GetDataSize()
+{
+	return _data->size();
+}
+
 float ReadFile::ParseLine(std::string line)
 {
 	int numSpaces = 0;

@@ -16,6 +16,7 @@ public:
 	void Load(std::string filename, size_t localSize);
 
 	std::vector<int>& GetData();
+	int GetDataSize();
 private:
 	std::vector<int>* _data;
 

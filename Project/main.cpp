@@ -76,7 +76,6 @@ int main(int argc, char **argv) {
 
 		//Part 4 - memory allocation
 		//host - input
-		std::vector<mytype> A = {0, 1, 1, 5, 4, 7, 6, 7, 2, 20};//allocate 10 elements with an initial value 1 - their sum is 10 so it should be easy to check the results!
 
 		//the following part adjusts the length of the input vector so it can be run for a specific workgroup size
 		//if the total input length is divisible by the workgroup size
@@ -100,8 +99,8 @@ int main(int argc, char **argv) {
 
 		std::cout << "Read & Parse (s): " << timeTaken / 1000.f << std::endl;
 
-		size_t input_elements = A.size();//number of input elements
-		size_t input_size = A.size()*sizeof(mytype);//size in bytes
+		size_t input_elements = myFile.GetDataSize();//number of input elements
+		size_t input_size = myFile.GetDataSize()*sizeof(mytype);//size in bytes
 		size_t nr_groups = input_elements / local_size;
 
 		//host - output
@@ -119,10 +118,10 @@ int main(int argc, char **argv) {
 		queue.enqueueFillBuffer(buffer_B, 0, 0, output_size);//zero B buffer on device memory
 
 		//5.2 Setup and execute all kernels (i.e. device code)
-		cl::Kernel kernel_1 = cl::Kernel(program, "hist_simple");
+		cl::Kernel kernel_1 = cl::Kernel(program, "minKernel");
 		kernel_1.setArg(0, buffer_A);
 		kernel_1.setArg(1, buffer_B);
-		kernel_1.setArg(2, (int)A.size()); // number of bins
+		kernel_1.setArg(2, (int)myFile.GetDataSize()); // number of bins
 
 		/*
 
