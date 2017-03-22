@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 		std::cout << "Runinng on " << GetPlatformName(platform_id) << ", " << GetDeviceName(platform_id, device_id) << std::endl;
 
 		//create a queue to which we will push commands for the device
-		cl::CommandQueue queue(context);
+		cl::CommandQueue queue(context, CL_QUEUE_PROFILING_ENABLE);
 
 		//2.2 Load & build the device code
 		cl::Program::Sources sources;
@@ -117,12 +117,15 @@ int main(int argc, char **argv) {
 		kernel_1.setArg(1, buffer_B);
 
 		//call all kernels in a sequence
-		queue.enqueueNDRangeKernel(kernel_1, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size));
+		cl::Event prof_event;
+		queue.enqueueNDRangeKernel(kernel_1, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size), NULL, &prof_event);
 
 		//5.3 Copy the result from device to host
 		queue.enqueueReadBuffer(buffer_B, CL_TRUE, 0, output_size, &B[0]);
 
-		std::cout << "Minimum: " << B[0] << std::endl;
+		std::cout << "\nMinimum: " << B[0] / 100.f << std::endl;
+		std::cout << "Minimum Time (ns): " << prof_event.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
+			prof_event.getProfilingInfo<CL_PROFILING_COMMAND_START>() << std::endl;
 
 	}
 	catch (cl::Error err) {
