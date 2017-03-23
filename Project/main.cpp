@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 		size_t nr_groups = input_elements / local_size;
 
 		//host - output
-		std::vector<mytype> B(input_elements);
+		std::vector<mytype> B(1);
 		size_t output_size = B.size()*sizeof(mytype);//size in bytes
 
 		//device - buffers
@@ -115,6 +115,7 @@ int main(int argc, char **argv) {
 		cl::Kernel kernel_1 = cl::Kernel(program, "minKernel");
 		kernel_1.setArg(0, buffer_A);
 		kernel_1.setArg(1, buffer_B);
+		kernel_1.setArg(2, cl::Local(local_size * sizeof(mytype)));
 
 		//call all kernels in a sequence
 		cl::Event prof_event;

@@ -1,19 +1,25 @@
-﻿__kernel void minKernel(__global const int* A, __global int* B)
+﻿__kernel void minKernel(__global const int* A, __global int* B, __local int* scratch)
 { 
 	int id = get_global_id(0);
-	int N = get_global_size(0);
+	int lid = get_local_id(0);
+	int N = get_local_size(0);
 
-	B[id] = A[id];
+	// copy over all data to the local memory
+	scratch[lid] = A[id];
 
-	barrier(CLK_GLOBAL_MEM_FENCE);
+	barrier(CLK_LOCAL_MEM_FENCE);
 
 	for (int i = 1; i < N; i *= 2) { //i is a stride
-		if (!(id % (i * 2)) && ((id + i) < N))
+		if (!(lid % (i * 2)) && ((lid + i) < N))
 		{
-			if (B[id] > B[id + i])
-				B[id] = B[id + i];
+			if (scratch[lid] > scratch[lid + i])
+				scratch[lid] = scratch[lid + i];
 		}		
 
-		barrier(CLK_GLOBAL_MEM_FENCE);
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
+
+	if (!lid) {
+		atomic_min(&B[0], scratch[lid]);
 	}
 }
