@@ -57,6 +57,8 @@ __kernel void addition_reduce(__global const int* A, __global int* B, __local in
 	int lid = get_local_id(0);
 	int N = get_local_size(0);
 
+	printf("\nval[%d]=%d", id, A[id]);
+
 	// copy over all data to the local memory
 	scratch[lid] = A[id];
 
@@ -74,4 +76,14 @@ __kernel void addition_reduce(__global const int* A, __global int* B, __local in
 	if (!lid) {
 		atomic_add(&B[0], scratch[lid]);
 	}
+}
+
+__kernel void variance_subtract(__global const int* input, __global int* output, int mean, int dataSize)
+{ 
+	int id = get_global_id(0);
+
+	if (id < dataSize)
+		output[id] = input[id] - mean;
+
+	output[id] = output[id] * output[id];
 }

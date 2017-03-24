@@ -20,12 +20,14 @@ namespace parallel_assignment
 
 		std::vector<int>& GetData();
 		int GetDataSize();
+		int GetPaddingSize();
 	private:
 		std::vector<int>* _data;
 
 		float ParseLine(std::string line);
 
 		int _dataSize;
+		int _paddingSize = 0;
 	};
 
 }

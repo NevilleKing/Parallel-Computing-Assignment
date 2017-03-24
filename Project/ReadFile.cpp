@@ -58,6 +58,8 @@ namespace parallel_assignment
 				std::vector<int> A_ext(localSize - padding_size, 0);
 				//append that extra vector to our input
 				_data->insert(_data->end(), A_ext.begin(), A_ext.end());
+
+				_paddingSize = A_ext.size();
 			}
 		}
 	}
@@ -70,6 +72,11 @@ namespace parallel_assignment
 	int ReadFile::GetDataSize()
 	{
 		return _dataSize;
+	}
+
+	int ReadFile::GetPaddingSize()
+	{
+		return _paddingSize;
 	}
 
 	float ReadFile::ParseLine(std::string line)

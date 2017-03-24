@@ -144,11 +144,39 @@ int main(int argc, char **argv) {
 
 		mean_kernel.ReadBuffer(output, meanOutput);
 
-		std::cout << "\nMean: " << (meanOutput[0] / myFile.GetDataSize()) / 100.f << std::endl;
+		meanOutput[0] /= myFile.GetDataSize();
+
+		std::cout << "\nMean: " << meanOutput[0] / 100.f << std::endl;
 		std::cout << "Mean Time (ns): " << mean_kernel.GetTime() << std::endl;
+
 		// for each number subtract mean and square result
+		parallel_assignment::Kernel var_subt("variance_subtract", local_size, context, queue, program);
+		var_subt.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
+		output = var_subt.AddBuffer(myFile.GetDataSize() + myFile.GetPaddingSize());
+		var_subt.AddArg(meanOutput[0]);
+		var_subt.AddArg(myFile.GetDataSize());
+
+		var_subt.Execute();
+
+		std::vector<mytype> var_subt_out(myFile.GetDataSize() + myFile.GetPaddingSize());
+
+		var_subt.ReadBuffer(output, var_subt_out);
 
 		// sum these up and divide by number of items
+		std::vector<mytype> variance(1);
+
+		parallel_assignment::Kernel variance_kernel("addition_reduce", local_size, context, queue, program);
+		variance_kernel.AddBufferFromBuffer(var_subt.GetRawBuffer(output));
+		output = variance_kernel.AddBuffer(variance.size());
+		variance_kernel.AddLocalArg();
+
+		variance_kernel.Execute();
+
+		variance_kernel.ReadBuffer(output, variance);
+
+		variance[0] /= myFile.GetDataSize();
+
+		std::cout << "\nVariance: " << variance[0] / 100.f << std::endl;
 
 		// square root and return
 
