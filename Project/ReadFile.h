@@ -5,20 +5,25 @@
 #include <fstream>
 #include <string>
 
-class ReadFile
+namespace parallel_assignment
 {
-public:
-	ReadFile(std::string filename);
-	ReadFile() {};
-	~ReadFile();
 
-	void Load(std::string filename);
-	void Load(std::string filename, size_t localSize);
+	class ReadFile
+	{
+	public:
+		ReadFile(std::string filename);
+		ReadFile() {};
+		~ReadFile();
 
-	std::vector<int>& GetData();
-	int GetDataSize();
-private:
-	std::vector<int>* _data;
+		void Load(std::string filename);
+		void Load(std::string filename, size_t localSize);
 
-	float ParseLine(std::string line);
-};
+		std::vector<int>& GetData();
+		int GetDataSize();
+	private:
+		std::vector<int>* _data;
+
+		float ParseLine(std::string line);
+	};
+
+}

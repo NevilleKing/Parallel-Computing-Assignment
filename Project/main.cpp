@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 		TimePoint startPoint = Clock::now();
 
 		// Read in file	
-		ReadFile myFile;
+		parallel_assignment::ReadFile myFile;
 		myFile.Load(ASSIGNMENT_FILENAME, local_size);
 
 
