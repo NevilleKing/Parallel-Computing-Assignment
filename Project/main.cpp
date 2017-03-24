@@ -94,20 +94,34 @@ int main(int argc, char **argv) {
 		std::cout << "Read & Parse (s): " << timeTaken / 1000.f << std::endl;
 
 		//host - output
-		std::vector<mytype> B(1);
+		std::vector<mytype> minOutput(1);
 
 		// create an instance of the kernel class to run the min stat in parallel
 		parallel_assignment::Kernel min_kernel("minKernel", local_size, context, queue, program);
 		min_kernel.AddBuffer(myFile.GetData(), true);
-		int output = min_kernel.AddBuffer(B.size());
+		int output = min_kernel.AddBuffer(minOutput.size());
 		min_kernel.AddLocalArg();
 
 		min_kernel.Execute();
 		
-		min_kernel.ReadBuffer(output, B);
+		min_kernel.ReadBuffer(output, minOutput);
 
-		std::cout << "\nMinimum: " << B[0] / 100.f << std::endl;
+		std::cout << "\nMinimum: " << minOutput[0] / 100.f << std::endl;
 		std::cout << "Minimum Time (ns): " << min_kernel.GetTime() << std::endl;
+
+		std::vector<mytype> maxOutput(1);
+
+		parallel_assignment::Kernel max_kernel("maxKernel", local_size, context, queue, program);
+		max_kernel.AddBuffer(myFile.GetData(), true);
+		output = max_kernel.AddBuffer(maxOutput.size());
+		max_kernel.AddLocalArg();
+
+		max_kernel.Execute();
+
+		max_kernel.ReadBuffer(output, maxOutput);
+
+		std::cout << "\nMaximum: " << maxOutput[0] / 100.f << std::endl;
+		std::cout << "Minimum Time (ns): " << max_kernel.GetTime() << std::endl;
 
 	}
 	catch (cl::Error err) {
