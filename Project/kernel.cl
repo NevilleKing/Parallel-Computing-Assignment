@@ -49,3 +49,8 @@ __kernel void maxKernel(__global const int* A, __global int* B, __local int* scr
 		atomic_max(&B[0], scratch[lid]);
 	}
 }
+
+__kernel void stdDevKernel(__global const int* A, __global int* B)
+{ 
+	
+}

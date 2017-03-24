@@ -94,6 +94,8 @@ int main(int argc, char **argv) {
 		std::cout << "Read & Parse (s): " << timeTaken / 1000.f << std::endl;
 
 		//host - output
+#pragma region min_max_kernels
+
 		std::vector<mytype> minOutput(1);
 
 		// create an instance of the kernel class to run the min stat in parallel
@@ -121,7 +123,27 @@ int main(int argc, char **argv) {
 		max_kernel.ReadBuffer(output, maxOutput);
 
 		std::cout << "\nMaximum: " << maxOutput[0] / 100.f << std::endl;
-		std::cout << "Minimum Time (ns): " << max_kernel.GetTime() << std::endl;
+		std::cout << "Maximum Time (ns): " << max_kernel.GetTime() << std::endl;
+
+#pragma endregion
+
+#pragma region std_dev_kernel
+
+		std::vector<mytype> stdDevOutput(1);
+
+		parallel_assignment::Kernel stdDev_kernel("stdDevKernel", local_size, context, queue, program);
+		stdDev_kernel.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
+		output = stdDev_kernel.AddBuffer(stdDevOutput.size());
+		stdDev_kernel.AddLocalArg();
+
+		stdDev_kernel.Execute();
+
+		stdDev_kernel.ReadBuffer(output, stdDevOutput);
+
+		std::cout << "\nStandard Deviation: " << stdDevOutput[0] / 100.f << std::endl;
+		std::cout << "Standard Deviation Time (ns): " << stdDev_kernel.GetTime() << std::endl;
+
+#pragma endregion
 
 	}
 	catch (cl::Error err) {
