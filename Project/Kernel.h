@@ -15,6 +15,27 @@
 
 namespace parallel_assignment
 {
+	// buffer object for passing between different instances of the kernel class
+	class Buffer
+	{
+	public:
+		Buffer(cl::Buffer* buffer, int buffer_size)
+		{
+			buff = buffer;
+			size = buffer_size;
+
+		}
+		~Buffer() 
+		{
+			if (buff != nullptr)
+				delete buff;
+		}
+		cl::Buffer* buff;
+		int size;
+	private:
+		Buffer(const Buffer& obj);
+	};
+
 	class Kernel
 	{
 	public:
@@ -23,10 +44,10 @@ namespace parallel_assignment
 
 		int AddBuffer(const std::vector<int>& input, bool readOnly = true);
 		int AddBuffer(int numElements);
-		int AddBufferFromBuffer(const std::pair<std::unique_ptr<cl::Buffer>, int>* prevBuffer);
+		int AddBufferFromBuffer(const std::unique_ptr<Buffer>& prevBuffer);
 		void AddLocalArg();
 
-		const std::pair<std::unique_ptr<cl::Buffer>, int>* GetRawBuffer(int buffer_id);
+		const std::unique_ptr<Buffer>& GetRawBuffer(int buffer_id);
 
 		void Execute();
 
@@ -41,7 +62,7 @@ namespace parallel_assignment
 
 		cl::Kernel _kernel;
 
-		std::vector<std::pair<std::unique_ptr<cl::Buffer>, int>> _buffers;
+		std::vector<std::unique_ptr<parallel_assignment::Buffer>> _buffers;
 
 		int _currentArgument = 0;
 
