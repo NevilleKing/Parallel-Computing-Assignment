@@ -44,10 +44,10 @@ namespace parallel_assignment
 
 		int AddBuffer(const std::vector<int>& input, bool readOnly = true);
 		int AddBuffer(int numElements);
-		int AddBufferFromBuffer(const std::unique_ptr<Buffer>& prevBuffer);
+		int AddBufferFromBuffer(const std::shared_ptr<Buffer> prevBuffer);
 		void AddLocalArg();
 
-		const std::unique_ptr<Buffer>& GetRawBuffer(int buffer_id);
+		const std::shared_ptr<Buffer> GetRawBuffer(int buffer_id);
 
 		void Execute();
 
@@ -62,7 +62,7 @@ namespace parallel_assignment
 
 		cl::Kernel _kernel;
 
-		std::vector<std::unique_ptr<parallel_assignment::Buffer>> _buffers;
+		std::vector<std::shared_ptr<parallel_assignment::Buffer>> _buffers;
 
 		int _currentArgument = 0;
 

@@ -21,9 +21,9 @@ namespace parallel_assignment
 
 		_queue->enqueueWriteBuffer(*buff, CL_TRUE, 0, size, &input[0]);
 
-		_kernel.setArg(_currentArgument++, buff);
+		_kernel.setArg(_currentArgument++, *buff);
 		
-		_buffers.push_back(std::unique_ptr<Buffer>(new parallel_assignment::Buffer(buff, size)));
+		_buffers.push_back(std::shared_ptr<Buffer>(new parallel_assignment::Buffer(buff, size)));
 
 		// first passed in buffer is assumed to be input array
 		if (_buffers.size() == 1)
@@ -40,17 +40,23 @@ namespace parallel_assignment
 
 		_queue->enqueueFillBuffer(*buff, 0, 0, size);
 
-		_kernel.setArg(_currentArgument++, buff);
+		_kernel.setArg(_currentArgument++, *buff);
 
-		_buffers.push_back(std::unique_ptr<Buffer>(new parallel_assignment::Buffer(buff, size)));
+		_buffers.push_back(std::shared_ptr<Buffer>(new parallel_assignment::Buffer(buff, size)));
 
 		return _buffers.size() - 1;
 	}
 
-	int Kernel::AddBufferFromBuffer(const std::unique_ptr<Buffer>& prevBuffer)
+	int Kernel::AddBufferFromBuffer(const std::shared_ptr<Buffer> prevBuffer)
 	{
-		_kernel.setArg(_currentArgument++, prevBuffer->buff);
+		_kernel.setArg(_currentArgument++, *(prevBuffer->buff));
 		_buffers.push_back(prevBuffer);
+
+		// first passed in buffer is assumed to be input array
+		if (_buffers.size() == 1)
+			_input_elements = prevBuffer->size / sizeof(int);
+
+		return _buffers.size() - 1;
 	}
 
 	void Kernel::AddLocalArg()
@@ -58,7 +64,7 @@ namespace parallel_assignment
 		_kernel.setArg(_currentArgument++, cl::Local(_local_size * sizeof(int)));
 	}
 
-	const std::unique_ptr<Buffer>& Kernel::GetRawBuffer(int buffer_id)
+	const std::shared_ptr<Buffer> Kernel::GetRawBuffer(int buffer_id)
 	{
 		if (buffer_id < 0 || buffer_id >= _buffers.size())
 			return nullptr;
