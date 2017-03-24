@@ -59,6 +59,11 @@ namespace parallel_assignment
 		return _buffers.size() - 1;
 	}
 
+	void Kernel::AddArg(int arg)
+	{
+		_kernel.setArg(_currentArgument++, (int)arg);
+	}
+
 	void Kernel::AddLocalArg()
 	{
 		_kernel.setArg(_currentArgument++, cl::Local(_local_size * sizeof(int)));

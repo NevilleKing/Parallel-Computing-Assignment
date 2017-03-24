@@ -24,6 +24,8 @@ namespace parallel_assignment
 		std::vector<int>* _data;
 
 		float ParseLine(std::string line);
+
+		int _dataSize;
 	};
 
 }

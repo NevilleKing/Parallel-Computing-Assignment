@@ -129,19 +129,30 @@ int main(int argc, char **argv) {
 
 #pragma region std_dev_kernel
 
+		system("pause");
+
 		std::vector<mytype> stdDevOutput(1);
+		std::vector<mytype> meanOutput(1);
 
-		parallel_assignment::Kernel stdDev_kernel("stdDevKernel", local_size, context, queue, program);
-		stdDev_kernel.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
-		output = stdDev_kernel.AddBuffer(stdDevOutput.size());
-		stdDev_kernel.AddLocalArg();
+		// Calculate mean
+		parallel_assignment::Kernel mean_kernel("addition_reduce", local_size, context, queue, program);
+		mean_kernel.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
+		output = mean_kernel.AddBuffer(meanOutput.size());
+		mean_kernel.AddLocalArg();
 
-		stdDev_kernel.Execute();
+		mean_kernel.Execute();
 
-		stdDev_kernel.ReadBuffer(output, stdDevOutput);
+		mean_kernel.ReadBuffer(output, meanOutput);
 
-		std::cout << "\nStandard Deviation: " << stdDevOutput[0] / 100.f << std::endl;
-		std::cout << "Standard Deviation Time (ns): " << stdDev_kernel.GetTime() << std::endl;
+		std::cout << "\nMean: " << (meanOutput[0] / myFile.GetDataSize()) / 100.f << std::endl;
+		std::cout << "Mean Time (ns): " << mean_kernel.GetTime() << std::endl;
+		// for each number subtract mean and square result
+
+		// sum these up and divide by number of items
+
+		// square root and return
+
+
 
 #pragma endregion
 

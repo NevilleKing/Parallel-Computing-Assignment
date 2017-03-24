@@ -42,6 +42,9 @@ namespace parallel_assignment
 
 		thefile.close();
 
+		// cache the data size so it doesn't affect mean calculations
+		_dataSize = _data->size();
+
 
 		// pad the vector if needed
 		if (localSize != 0)
@@ -66,7 +69,7 @@ namespace parallel_assignment
 
 	int ReadFile::GetDataSize()
 	{
-		return _data->size();
+		return _dataSize;
 	}
 
 	float ReadFile::ParseLine(std::string line)
