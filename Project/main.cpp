@@ -17,6 +17,7 @@
 #include <chrono>
 
 #include "ReadFile.h"
+#include "Kernel.h"
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef std::chrono::high_resolution_clock::time_point TimePoint;
@@ -88,7 +89,6 @@ int main(int argc, char **argv) {
 		parallel_assignment::ReadFile myFile;
 		myFile.Load(ASSIGNMENT_FILENAME, local_size);
 
-
 		auto timeTaken = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startPoint).count();
 
 		std::cout << "Read & Parse (s): " << timeTaken / 1000.f << std::endl;
@@ -96,6 +96,9 @@ int main(int argc, char **argv) {
 		size_t input_elements = myFile.GetDataSize();//number of input elements
 		size_t input_size = myFile.GetDataSize()*sizeof(mytype);//size in bytes
 		size_t nr_groups = input_elements / local_size;
+
+		// create an instance of the kernel class to run stats in parallel
+		parallel_assignment::Kernel<mytype> min_kernel;
 
 		//host - output
 		std::vector<mytype> B(1);
