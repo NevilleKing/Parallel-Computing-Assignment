@@ -56,7 +56,7 @@ namespace parallel_assignment
 	{
 		cl::Event prof_event;
 		_queue->enqueueNDRangeKernel(_kernel, cl::NullRange, cl::NDRange(_input_elements), cl::NDRange(_local_size), NULL, &prof_event);
-
+		prof_event.wait(); // make sure we have a time back
 		// calculate the time from the profile event
 		_profile_time = prof_event.getProfilingInfo<CL_PROFILING_COMMAND_END>() - prof_event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
 	}
