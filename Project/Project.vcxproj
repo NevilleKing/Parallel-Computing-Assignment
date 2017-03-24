@@ -177,6 +177,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Kernel.h" />
     <ClInclude Include="ReadFile.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
@@ -184,6 +185,7 @@
     <Intel_OpenCL_Build_Rules Include="my_kernels.cl" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Kernel.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ReadFile.cpp" />
   </ItemGroup>

@@ -93,43 +93,21 @@ int main(int argc, char **argv) {
 
 		std::cout << "Read & Parse (s): " << timeTaken / 1000.f << std::endl;
 
-		size_t input_elements = myFile.GetDataSize();//number of input elements
-		size_t input_size = myFile.GetDataSize()*sizeof(mytype);//size in bytes
-		size_t nr_groups = input_elements / local_size;
-
-		// create an instance of the kernel class to run stats in parallel
-		parallel_assignment::Kernel<mytype> min_kernel;
-
 		//host - output
 		std::vector<mytype> B(1);
-		size_t output_size = B.size()*sizeof(mytype);//size in bytes
 
-		//device - buffers
-		cl::Buffer buffer_A(context, CL_MEM_READ_ONLY, input_size);
-		cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, output_size);
+		// create an instance of the kernel class to run the min stat in parallel
+		parallel_assignment::Kernel min_kernel("minKernel", local_size, context, queue, program);
+		min_kernel.AddBuffer(myFile.GetData(), true);
+		int output = min_kernel.AddBuffer(B.size());
+		min_kernel.AddLocalArg();
 
-		//Part 5 - device operations
-
-		//5.1 copy array A to and initialise other arrays on device memory
-		queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, input_size, &myFile.GetData()[0]);
-		queue.enqueueFillBuffer(buffer_B, 0, 0, output_size);//zero B buffer on device memory
-
-		//5.2 Setup and execute all kernels (i.e. device code)
-		cl::Kernel kernel_1 = cl::Kernel(program, "minKernel");
-		kernel_1.setArg(0, buffer_A);
-		kernel_1.setArg(1, buffer_B);
-		kernel_1.setArg(2, cl::Local(local_size * sizeof(mytype)));
-
-		//call all kernels in a sequence
-		cl::Event prof_event;
-		queue.enqueueNDRangeKernel(kernel_1, cl::NullRange, cl::NDRange(input_elements), cl::NDRange(local_size), NULL, &prof_event);
-
-		//5.3 Copy the result from device to host
-		queue.enqueueReadBuffer(buffer_B, CL_TRUE, 0, output_size, &B[0]);
+		min_kernel.Execute();
+		
+		min_kernel.ReadBuffer(output, B);
 
 		std::cout << "\nMinimum: " << B[0] / 100.f << std::endl;
-		std::cout << "Minimum Time (ns): " << prof_event.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
-			prof_event.getProfilingInfo<CL_PROFILING_COMMAND_START>() << std::endl;
+		std::cout << "Minimum Time (ns): " << min_kernel.GetTime() << std::endl;
 
 	}
 	catch (cl::Error err) {
