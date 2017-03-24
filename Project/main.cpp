@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 		std::vector<mytype> maxOutput(1);
 
 		parallel_assignment::Kernel max_kernel("maxKernel", local_size, context, queue, program);
-		max_kernel.AddBuffer(myFile.GetData(), true);
+		max_kernel.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
 		output = max_kernel.AddBuffer(maxOutput.size());
 		max_kernel.AddLocalArg();
 

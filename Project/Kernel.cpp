@@ -17,9 +17,9 @@ namespace parallel_assignment
 	{
 		int size = input.size() * sizeof(int);
 		int readWrite = (readOnly ? CL_MEM_READ_ONLY : CL_MEM_READ_WRITE);
-		cl::Buffer buff(*_context, readWrite, size);
+		std::unique_ptr<cl::Buffer> buff = std::unique_ptr<cl::Buffer>(new cl::Buffer(*_context, readWrite, size));
 
-		_queue->enqueueWriteBuffer(buff, CL_TRUE, 0, size, &input[0]);
+		_queue->enqueueWriteBuffer(*buff, CL_TRUE, 0, size, &input[0]);
 
 		_kernel.setArg(_currentArgument++, buff);
 		
@@ -36,9 +36,9 @@ namespace parallel_assignment
 	{
 		int size = numElements * sizeof(int);
 
-		cl::Buffer buff(*_context, CL_MEM_READ_WRITE, size);
+		std::unique_ptr<cl::Buffer> buff = std::unique_ptr<cl::Buffer>(new cl::Buffer(*_context, CL_MEM_READ_WRITE, size));
 
-		_queue->enqueueFillBuffer(buff, 0, 0, size);
+		_queue->enqueueFillBuffer(*buff, 0, 0, size);
 
 		_kernel.setArg(_currentArgument++, buff);
 
@@ -47,9 +47,23 @@ namespace parallel_assignment
 		return _buffers.size() - 1;
 	}
 
+	int Kernel::AddBufferFromBuffer(const std::pair<std::unique_ptr<cl::Buffer>, int>* prevBuffer)
+	{
+		_kernel.setArg(_currentArgument++, prevBuffer->first.get());
+		_buffers.push_back(std::make_pair(prevBuffer->first, prevBuffer->second));
+	}
+
 	void Kernel::AddLocalArg()
 	{
 		_kernel.setArg(_currentArgument++, cl::Local(_local_size * sizeof(int)));
+	}
+
+	const std::pair<std::unique_ptr<cl::Buffer>, int>* Kernel::GetRawBuffer(int buffer_id)
+	{
+		if (buffer_id < 0 || buffer_id >= _buffers.size())
+			return nullptr;
+
+		return &_buffers[buffer_id];
 	}
 
 	void Kernel::Execute()
@@ -63,7 +77,7 @@ namespace parallel_assignment
 
 	void Kernel::ReadBuffer(int buffer_id, std::vector<int>& output_vector)
 	{
-		_queue->enqueueReadBuffer(_buffers[buffer_id].first, CL_TRUE, 0, _buffers[buffer_id].second, &output_vector[0]);
+		_queue->enqueueReadBuffer(*_buffers[buffer_id].first.get(), CL_TRUE, 0, _buffers[buffer_id].second, &output_vector[0]);
 	}
 
 	int Kernel::GetTime()

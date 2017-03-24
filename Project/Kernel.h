@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #ifdef __APPLE__
 #include <OpenCL/cl.hpp>
@@ -22,7 +23,10 @@ namespace parallel_assignment
 
 		int AddBuffer(const std::vector<int>& input, bool readOnly = true);
 		int AddBuffer(int numElements);
+		int AddBufferFromBuffer(const std::pair<std::unique_ptr<cl::Buffer>, int>* prevBuffer);
 		void AddLocalArg();
+
+		const std::pair<std::unique_ptr<cl::Buffer>, int>* GetRawBuffer(int buffer_id);
 
 		void Execute();
 
@@ -37,7 +41,7 @@ namespace parallel_assignment
 
 		cl::Kernel _kernel;
 
-		std::vector<std::pair<cl::Buffer, int>> _buffers;
+		std::vector<std::pair<std::unique_ptr<cl::Buffer>, int>> _buffers;
 
 		int _currentArgument = 0;
 
