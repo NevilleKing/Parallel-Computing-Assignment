@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 		//the following part adjusts the length of the input vector so it can be run for a specific workgroup size
 		//if the total input length is divisible by the workgroup size
 		//this makes the code more efficient
-		size_t local_size = 64;
+		size_t local_size = 10;
 
 		TimePoint startPoint = Clock::now();
 
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
 		auto timeTaken = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - startPoint).count();
 
 		std::cout << "Read & Parse (s): " << timeTaken / 1000.f << std::endl;
-
+		/*
 		//host - output
 #pragma region min_max_kernels
 
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
 		std::cout << "Maximum Time (ns): " << max_kernel.GetTime() << std::endl;
 
 #pragma endregion
-
+*/
 #pragma region std_dev_kernel
 
 		system("pause");
@@ -136,13 +136,13 @@ int main(int argc, char **argv) {
 
 		// Calculate mean
 		parallel_assignment::Kernel mean_kernel("addition_reduce", local_size, context, queue, program);
-		mean_kernel.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
-		output = mean_kernel.AddBuffer(meanOutput.size());
+		mean_kernel.AddBuffer(myFile.GetData(), true);
+		mean_kernel.AddBuffer(meanOutput.size());
 		mean_kernel.AddLocalArg();
 
 		mean_kernel.Execute();
 
-		mean_kernel.ReadBuffer(output, meanOutput);
+		mean_kernel.ReadBuffer(1, meanOutput);
 
 		meanOutput[0] /= myFile.GetDataSize();
 
@@ -151,32 +151,53 @@ int main(int argc, char **argv) {
 
 		// for each number subtract mean and square result
 		parallel_assignment::Kernel var_subt("variance_subtract", local_size, context, queue, program);
-		var_subt.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
-		output = var_subt.AddBuffer(myFile.GetDataSize() + myFile.GetPaddingSize());
+		var_subt.AddBufferFromBuffer(mean_kernel.GetRawBuffer(0));
+		var_subt.AddBuffer(myFile.GetDataSize() + myFile.GetPaddingSize());
 		var_subt.AddArg(meanOutput[0]);
 		var_subt.AddArg(myFile.GetDataSize());
 
 		var_subt.Execute();
 
-		std::vector<mytype> var_subt_out(myFile.GetDataSize() + myFile.GetPaddingSize());
-
-		var_subt.ReadBuffer(output, var_subt_out);
-
 		// sum these up and divide by number of items
-		std::vector<mytype> variance(1);
 
-		parallel_assignment::Kernel variance_kernel("addition_reduce", local_size, context, queue, program);
-		variance_kernel.AddBufferFromBuffer(var_subt.GetRawBuffer(output));
-		output = variance_kernel.AddBuffer(variance.size());
-		variance_kernel.AddLocalArg();
+		parallel_assignment::Kernel scan_add("scan_add", local_size, context, queue, program);
+		scan_add.AddBufferFromBuffer(var_subt.GetRawBuffer(1));
+		scan_add.AddBufferFromBuffer(var_subt.GetRawBuffer(0));
+		scan_add.AddLocalArg();
+		scan_add.AddLocalArg();
 
-		variance_kernel.Execute();
+		scan_add.Execute();
 
-		variance_kernel.ReadBuffer(output, variance);
+		parallel_assignment::Kernel block_sum("block_sum", local_size, context, queue, program);
+		block_sum.AddBufferFromBuffer(scan_add.GetRawBuffer(0));
+		block_sum.AddBuffer((myFile.GetDataSize() + myFile.GetPaddingSize()) / local_size);
+		block_sum.AddArg(local_size);
 
-		variance[0] /= myFile.GetDataSize();
+		block_sum.Execute();
 
-		std::cout << "\nVariance: " << variance[0] / 100.f << std::endl;
+		std::cout << "before scan_add_atomic" << std::endl;
+
+		parallel_assignment::Kernel scan_add_atomic("scan_add_atomic", local_size, context, queue, program);
+		scan_add_atomic.AddBufferFromBuffer(scan_add.GetRawBuffer(1));
+		scan_add_atomic.AddBufferFromBuffer(scan_add.GetRawBuffer(0));
+
+		scan_add_atomic.Execute();
+
+		std::cout << "before scan_add_adjust" << std::endl;
+
+
+		parallel_assignment::Kernel scan_add_adjust("scan_add_adjust", local_size, context, queue, program);
+		scan_add_adjust.AddBufferFromBuffer(scan_add_atomic.GetRawBuffer(1));
+		scan_add_adjust.AddBufferFromBuffer(scan_add_atomic.GetRawBuffer(0));
+
+		scan_add_adjust.Execute();
+
+		std::cout << "before end" << std::endl;
+
+		std::vector<mytype> var_out(myFile.GetDataSize() + myFile.GetPaddingSize());
+		scan_add_adjust.ReadBuffer(0, var_out);
+
+		std::cout << var_out[0] << std::endl;
 
 		// square root and return
 
