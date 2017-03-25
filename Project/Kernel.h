@@ -44,15 +44,18 @@ namespace parallel_assignment
 
 		int AddBuffer(const std::vector<int>& input, bool readOnly = true);
 		int AddBuffer(int numElements);
+		int AddBufferLong(int numElements);
 		int AddBufferFromBuffer(const std::shared_ptr<Buffer> prevBuffer);
 		void AddArg(int arg);
 		void AddLocalArg();
+		void AddLocalArgLong();
 
 		const std::shared_ptr<Buffer> GetRawBuffer(int buffer_id);
 
 		void Execute();
 
 		void ReadBuffer(int buffer_id, std::vector<int>& output_vector);
+		void ReadBufferLong(int buffer_id, std::vector<long>& output_vector);
 
 		int GetTime();
 

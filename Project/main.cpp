@@ -163,16 +163,16 @@ int main(int argc, char **argv) {
 		var_subt.ReadBuffer(output, var_subt_out);
 
 		// sum these up and divide by number of items
-		std::vector<mytype> variance(1);
+		std::vector<long> variance(1);
 
-		parallel_assignment::Kernel variance_kernel("addition_reduce", local_size, context, queue, program);
-		variance_kernel.AddBufferFromBuffer(var_subt.GetRawBuffer(output));
-		output = variance_kernel.AddBuffer(variance.size());
-		variance_kernel.AddLocalArg();
+		parallel_assignment::Kernel variance_kernel("addition_reduce_long", local_size, context, queue, program);
+		variance_kernel.AddBuffer(var_subt_out, true);
+		output = variance_kernel.AddBufferLong(variance.size());
+		variance_kernel.AddLocalArgLong();
 
 		variance_kernel.Execute();
 
-		variance_kernel.ReadBuffer(output, variance);
+		variance_kernel.ReadBufferLong(output, variance);
 
 		variance[0] /= myFile.GetDataSize();
 

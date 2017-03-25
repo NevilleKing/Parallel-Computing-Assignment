@@ -1,4 +1,6 @@
-﻿__kernel void minKernel(__global const int* A, __global int* B, __local int* scratch)
+﻿#pragma OPENCL EXTENSION cl_khr_int64_base_atomics : enable
+
+__kernel void minKernel(__global const int* A, __global int* B, __local int* scratch)
 { 
 	int id = get_global_id(0);
 	int lid = get_local_id(0);
@@ -57,7 +59,7 @@ __kernel void addition_reduce(__global const int* A, __global int* B, __local in
 	int lid = get_local_id(0);
 	int N = get_local_size(0);
 
-	printf("\nval[%d]=%d", id, A[id]);
+	//printf("\nval[%d]=%d", id, A[id]);
 
 	// copy over all data to the local memory
 	scratch[lid] = A[id];
@@ -75,6 +77,34 @@ __kernel void addition_reduce(__global const int* A, __global int* B, __local in
 
 	if (!lid) {
 		atomic_add(&B[0], scratch[lid]);
+	}
+}
+
+// addition kernel - used below
+__kernel void addition_reduce_long(__global const int* A, __global long* B, __local long* scratch)
+{
+	int id = get_global_id(0);
+	int lid = get_local_id(0);
+	int N = get_local_size(0);
+
+	//printf("\nval[%d]=%d", id, A[id]);
+
+	// copy over all data to the local memory
+	scratch[lid] = A[id];
+
+	barrier(CLK_LOCAL_MEM_FENCE);
+
+	for (int i = 1; i < N; i *= 2) { //i is a stride
+		if (!(lid % (i * 2)) && ((lid + i) < N))
+		{
+				scratch[lid] += scratch[lid + i];
+		}
+
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
+
+	if (!lid) {
+		atom_add(&B[0], scratch[lid]);
 	}
 }
 
