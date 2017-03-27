@@ -175,13 +175,11 @@ int main(int argc, char **argv) {
 
 		variance_kernel.ReadBuffer(output, variance);
 
-		//variance[0] /= myFile.GetDataSize();
-
 		std::cout << "\nVariance: " << variance[0] / 100.f << std::endl;
 
+		// square root and return
 		std::cout << "\nStandard Dev: " << sqrt(variance[0]) / 100.f  << std::endl;
 
-		// square root and return
 
 
 
