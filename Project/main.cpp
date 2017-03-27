@@ -1,7 +1,7 @@
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #define __CL_ENABLE_EXCEPTIONS
 
-#define ASSIGNMENT_FILENAME "temp_lincolnshire_short.txt"
+#define ASSIGNMENT_FILENAME "temp_lincolnshire.txt"
 
 #include <iostream>
 #include <vector>
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 		//the following part adjusts the length of the input vector so it can be run for a specific workgroup size
 		//if the total input length is divisible by the workgroup size
 		//this makes the code more efficient
-		size_t local_size = 64;
+		size_t local_size = 1024;
 
 		TimePoint startPoint = Clock::now();
 
@@ -165,16 +165,17 @@ int main(int argc, char **argv) {
 		// sum these up and divide by number of items
 		std::vector<unsigned int> variance(1);
 
-		parallel_assignment::Kernel variance_kernel("addition_reduce", local_size, context, queue, program);
+		parallel_assignment::Kernel variance_kernel("addition_reduce2", local_size, context, queue, program);
 		variance_kernel.AddBufferFromBuffer(var_subt.GetRawBuffer(output));
 		output = variance_kernel.AddBuffer<unsigned int>(variance.size());
 		variance_kernel.AddLocalArg<unsigned int>();
+		variance_kernel.AddArg(myFile.GetDataSize());
 
 		variance_kernel.Execute();
 
 		variance_kernel.ReadBuffer(output, variance);
 
-		variance[0] /= myFile.GetDataSize();
+		//variance[0] /= myFile.GetDataSize();
 
 		std::cout << "\nVariance: " << variance[0] / 100.f << std::endl;
 
