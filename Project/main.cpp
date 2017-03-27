@@ -101,8 +101,8 @@ int main(int argc, char **argv) {
 		// create an instance of the kernel class to run the min stat in parallel
 		parallel_assignment::Kernel min_kernel("minKernel", local_size, context, queue, program);
 		min_kernel.AddBuffer(myFile.GetData(), true);
-		int output = min_kernel.AddBuffer(minOutput.size());
-		min_kernel.AddLocalArg();
+		int output = min_kernel.AddBuffer<mytype>(minOutput.size());
+		min_kernel.AddLocalArg<mytype>();
 
 		min_kernel.Execute();
 		
@@ -115,8 +115,8 @@ int main(int argc, char **argv) {
 
 		parallel_assignment::Kernel max_kernel("maxKernel", local_size, context, queue, program);
 		max_kernel.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
-		output = max_kernel.AddBuffer(maxOutput.size());
-		max_kernel.AddLocalArg();
+		output = max_kernel.AddBuffer<mytype>(maxOutput.size());
+		max_kernel.AddLocalArg<mytype>();
 
 		max_kernel.Execute();
 
@@ -137,8 +137,8 @@ int main(int argc, char **argv) {
 		// Calculate mean
 		parallel_assignment::Kernel mean_kernel("addition_reduce", local_size, context, queue, program);
 		mean_kernel.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
-		output = mean_kernel.AddBuffer(meanOutput.size());
-		mean_kernel.AddLocalArg();
+		output = mean_kernel.AddBuffer<mytype>(meanOutput.size());
+		mean_kernel.AddLocalArg<mytype>();
 
 		mean_kernel.Execute();
 
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
 		// for each number subtract mean and square result
 		parallel_assignment::Kernel var_subt("variance_subtract", local_size, context, queue, program);
 		var_subt.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
-		output = var_subt.AddBuffer(myFile.GetDataSize() + myFile.GetPaddingSize());
+		output = var_subt.AddBuffer<mytype>(myFile.GetDataSize() + myFile.GetPaddingSize());
 		var_subt.AddArg(meanOutput[0]);
 		var_subt.AddArg(myFile.GetDataSize());
 
@@ -163,12 +163,12 @@ int main(int argc, char **argv) {
 		var_subt.ReadBuffer(output, var_subt_out);
 
 		// sum these up and divide by number of items
-		std::vector<mytype> variance(1);
+		std::vector<unsigned int> variance(1);
 
 		parallel_assignment::Kernel variance_kernel("addition_reduce", local_size, context, queue, program);
 		variance_kernel.AddBufferFromBuffer(var_subt.GetRawBuffer(output));
-		output = variance_kernel.AddBuffer(variance.size());
-		variance_kernel.AddLocalArg();
+		output = variance_kernel.AddBuffer<unsigned int>(variance.size());
+		variance_kernel.AddLocalArg<unsigned int>();
 
 		variance_kernel.Execute();
 
@@ -177,6 +177,8 @@ int main(int argc, char **argv) {
 		variance[0] /= myFile.GetDataSize();
 
 		std::cout << "\nVariance: " << variance[0] / 100.f << std::endl;
+
+		std::cout << "\nStandard Dev: " << sqrt(variance[0]) / 100.f  << std::endl;
 
 		// square root and return
 

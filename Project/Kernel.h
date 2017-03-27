@@ -43,16 +43,41 @@ namespace parallel_assignment
 		~Kernel() {};
 
 		int AddBuffer(const std::vector<int>& input, bool readOnly = true);
-		int AddBuffer(int numElements);
+
+		template<typename F>
+		int AddBuffer(int numElements)
+		{
+			int size = numElements * sizeof(F);
+
+			cl::Buffer* buff = new cl::Buffer(*_context, CL_MEM_READ_WRITE, size);
+
+			_queue->enqueueFillBuffer(*buff, 0, 0, size);
+
+			_kernel.setArg(_currentArgument++, *buff);
+
+			_buffers.push_back(std::shared_ptr<Buffer>(new parallel_assignment::Buffer(buff, size)));
+
+			return _buffers.size() - 1;
+		}
+
 		int AddBufferFromBuffer(const std::shared_ptr<Buffer> prevBuffer);
 		void AddArg(int arg);
-		void AddLocalArg();
+
+		template<typename G>
+		void AddLocalArg()
+		{
+			_kernel.setArg(_currentArgument++, cl::Local(_local_size * sizeof(G)));
+		}
 
 		const std::shared_ptr<Buffer> GetRawBuffer(int buffer_id);
 
 		void Execute();
 
-		void ReadBuffer(int buffer_id, std::vector<int>& output_vector);
+		template<typename T>
+		void ReadBuffer(int buffer_id, std::vector<T>& output_vector)
+		{
+			_queue->enqueueReadBuffer(*_buffers[buffer_id].get()->buff, CL_TRUE, 0, _buffers[buffer_id].get()->size, &output_vector[0]);
+		}
 
 		int GetTime();
 

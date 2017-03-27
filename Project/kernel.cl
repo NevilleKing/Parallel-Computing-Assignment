@@ -51,13 +51,11 @@ __kernel void maxKernel(__global const int* A, __global int* B, __local int* scr
 }
 
 // addition kernel - used below
-__kernel void addition_reduce(__global const int* A, __global int* B, __local int* scratch)
+__kernel void addition_reduce(__global const int* A, __global unsigned int* B, __local unsigned int* scratch)
 {
 	int id = get_global_id(0);
 	int lid = get_local_id(0);
 	int N = get_local_size(0);
-
-	printf("\nval[%d]=%d", id, A[id]);
 
 	// copy over all data to the local memory
 	scratch[lid] = A[id];
@@ -85,5 +83,5 @@ __kernel void variance_subtract(__global const int* input, __global int* output,
 	if (id < dataSize)
 		output[id] = input[id] - mean;
 
-	output[id] = output[id] * output[id];
+	output[id] = (output[id] * output[id]);
 }

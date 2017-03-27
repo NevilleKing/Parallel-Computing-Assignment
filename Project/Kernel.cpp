@@ -32,21 +32,6 @@ namespace parallel_assignment
 		return _buffers.size() - 1;
 	}
 
-	int Kernel::AddBuffer(int numElements)
-	{
-		int size = numElements * sizeof(int);
-
-		cl::Buffer* buff = new cl::Buffer(*_context, CL_MEM_READ_WRITE, size);
-
-		_queue->enqueueFillBuffer(*buff, 0, 0, size);
-
-		_kernel.setArg(_currentArgument++, *buff);
-
-		_buffers.push_back(std::shared_ptr<Buffer>(new parallel_assignment::Buffer(buff, size)));
-
-		return _buffers.size() - 1;
-	}
-
 	int Kernel::AddBufferFromBuffer(const std::shared_ptr<Buffer> prevBuffer)
 	{
 		_kernel.setArg(_currentArgument++, *(prevBuffer->buff));
@@ -64,11 +49,6 @@ namespace parallel_assignment
 		_kernel.setArg(_currentArgument++, (int)arg);
 	}
 
-	void Kernel::AddLocalArg()
-	{
-		_kernel.setArg(_currentArgument++, cl::Local(_local_size * sizeof(int)));
-	}
-
 	const std::shared_ptr<Buffer> Kernel::GetRawBuffer(int buffer_id)
 	{
 		if (buffer_id < 0 || buffer_id >= _buffers.size())
@@ -84,11 +64,6 @@ namespace parallel_assignment
 		prof_event.wait(); // make sure we have a time back
 		// calculate the time from the profile event
 		_profile_time = prof_event.getProfilingInfo<CL_PROFILING_COMMAND_END>() - prof_event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
-	}
-
-	void Kernel::ReadBuffer(int buffer_id, std::vector<int>& output_vector)
-	{
-		_queue->enqueueReadBuffer(*_buffers[buffer_id].get()->buff, CL_TRUE, 0, _buffers[buffer_id].get()->size, &output_vector[0]);
 	}
 
 	int Kernel::GetTime()
