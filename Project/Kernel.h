@@ -42,7 +42,7 @@ namespace parallel_assignment
 		Kernel(std::string kernel_name, int local_size, cl::Context& context, cl::CommandQueue& queue, cl::Program& program);
 		~Kernel() {};
 
-		int AddBuffer(const std::vector<int>& input, bool readOnly = true);
+		int AddBuffer(const std::vector<float>& input, bool readOnly = true);
 
 		template<typename F>
 		int AddBuffer(int numElements)

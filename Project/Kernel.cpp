@@ -13,9 +13,9 @@ namespace parallel_assignment
 		_kernel = cl::Kernel(program, kernel_name.c_str());
 	}
 
-	int Kernel::AddBuffer(const std::vector<int>& input, bool readOnly)
+	int Kernel::AddBuffer(const std::vector<float>& input, bool readOnly)
 	{
-		int size = input.size() * sizeof(int);
+		int size = input.size() * sizeof(float);
 		int readWrite = (readOnly ? CL_MEM_READ_ONLY : CL_MEM_READ_WRITE);
 		cl::Buffer* buff = new cl::Buffer(*_context, readWrite, size);
 

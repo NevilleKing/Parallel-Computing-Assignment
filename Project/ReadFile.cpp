@@ -22,7 +22,7 @@ namespace parallel_assignment
 	void ReadFile::Load(std::string filename, size_t localSize)
 	{
 		// create the data vector
-		_data = new std::vector<int>;
+		_data = new std::vector<float>;
 
 		std::ifstream thefile;
 		thefile.open(filename, std::ios::in);
@@ -64,7 +64,7 @@ namespace parallel_assignment
 		}
 	}
 
-	std::vector<int>& ReadFile::GetData()
+	std::vector<float>& ReadFile::GetData()
 	{
 		return *_data;
 	}
@@ -93,7 +93,7 @@ namespace parallel_assignment
 
 		index++;
 
-		return std::strtof(line.substr(index).c_str(), 0) * 100;
+		return std::strtof(line.substr(index).c_str(), 0);
 	}
 
 }

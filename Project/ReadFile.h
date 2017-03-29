@@ -18,11 +18,11 @@ namespace parallel_assignment
 		void Load(std::string filename);
 		void Load(std::string filename, size_t localSize);
 
-		std::vector<int>& GetData();
+		std::vector<float>& GetData();
 		int GetDataSize();
 		int GetPaddingSize();
 	private:
-		std::vector<int>* _data;
+		std::vector<float>* _data;
 
 		float ParseLine(std::string line);
 
