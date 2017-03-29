@@ -21,6 +21,7 @@ namespace parallel_assignment
 		std::vector<float>& GetData();
 		int GetDataSize();
 		int GetPaddingSize();
+		int GetTotalSize();
 	private:
 		std::vector<float>* _data;
 

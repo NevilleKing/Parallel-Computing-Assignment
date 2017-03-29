@@ -154,7 +154,7 @@ __kernel void addition_reduce2(__global const int* A, __global unsigned int* B, 
 	}
 }
 
-__kernel void variance_subtract(__global const int* input, __global int* output, int mean, int dataSize)
+__kernel void variance_subtract(__global const float* input, __global float* output, float mean, int dataSize)
 { 
 	int id = get_global_id(0);
 

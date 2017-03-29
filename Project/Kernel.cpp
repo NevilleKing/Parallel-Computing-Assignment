@@ -39,14 +39,14 @@ namespace parallel_assignment
 
 		// first passed in buffer is assumed to be input array
 		if (_buffers.size() == 1)
-			_input_elements = prevBuffer->size / sizeof(int);
+			_input_elements = prevBuffer->size / sizeof(float);
 
 		return _buffers.size() - 1;
 	}
 
-	void Kernel::AddArg(int arg)
+	void Kernel::AddArg(float arg)
 	{
-		_kernel.setArg(_currentArgument++, (int)arg);
+		_kernel.setArg(_currentArgument++, (float)arg);
 	}
 
 	const std::shared_ptr<Buffer> Kernel::GetRawBuffer(int buffer_id)

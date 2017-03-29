@@ -79,6 +79,11 @@ namespace parallel_assignment
 		return _paddingSize;
 	}
 
+	int ReadFile::GetTotalSize()
+	{
+		return _dataSize + _paddingSize;
+	}
+
 	float ReadFile::ParseLine(std::string line)
 	{
 		int numSpaces = 0;

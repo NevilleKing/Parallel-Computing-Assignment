@@ -61,7 +61,7 @@ namespace parallel_assignment
 		}
 
 		int AddBufferFromBuffer(const std::shared_ptr<Buffer> prevBuffer);
-		void AddArg(int arg);
+		void AddArg(float arg);
 
 		template<typename G>
 		void AddLocalArg()

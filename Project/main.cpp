@@ -1,7 +1,8 @@
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #define __CL_ENABLE_EXCEPTIONS
 
-#define ASSIGNMENT_FILENAME "temp_lincolnshire.txt"
+#define ASSIGNMENT_FILENAME "temp_lincolnshire_short.txt"
+#define LOCAL_SIZE 128
 
 #include <iostream>
 #include <vector>
@@ -81,7 +82,7 @@ int main(int argc, char **argv) {
 		//the following part adjusts the length of the input vector so it can be run for a specific workgroup size
 		//if the total input length is divisible by the workgroup size
 		//this makes the code more efficient
-		size_t local_size = 128;
+		size_t local_size = LOCAL_SIZE;
 
 		TimePoint startPoint = Clock::now();
 
@@ -134,7 +135,6 @@ int main(int argc, char **argv) {
 
 		int workgroupSize = myFile.GetDataSize() / local_size;
 
-		std::vector<mytype> stdDevOutput(1);
 		std::vector<mytype> meanOutput(workgroupSize);
 
 		// Calculate mean
@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
 		TimePoint current = Clock::now();
 
 		float total = 0;
-		for (int i = 0; i <= workgroupSize; i++)
+		for (int i = 0; i < workgroupSize; i++)
 		{
 			total += meanOutput[i];
 		}
@@ -167,34 +167,47 @@ int main(int argc, char **argv) {
 
 		// for each number subtract mean and square result
 		parallel_assignment::Kernel var_subt("variance_subtract", local_size, context, queue, program);
-		var_subt.AddBufferFromBuffer(mean_kernel.GetRawBuffer(output));
-		output = var_subt.AddBuffer<mytype>(myFile.GetDataSize() + myFile.GetPaddingSize());
-		var_subt.AddArg(meanOutput[0]);
+		var_subt.AddBufferFromBuffer(mean_kernel.GetRawBuffer(0));
+		output = var_subt.AddBuffer<mytype>(myFile.GetTotalSize());
+		var_subt.AddArg(total);
 		var_subt.AddArg(myFile.GetDataSize());
 
 		var_subt.Execute();
 
-		std::vector<mytype> var_subt_out(myFile.GetDataSize() + myFile.GetPaddingSize());
-
-		var_subt.ReadBuffer(output, var_subt_out);
+		std::vector<mytype> outputTest(myFile.GetTotalSize());
+		var_subt.ReadBuffer(output, outputTest);
 
 		// sum these up and divide by number of items
-		std::vector<unsigned int> variance(1);
+		std::vector<mytype> variance_out(workgroupSize);
 
-		parallel_assignment::Kernel variance_kernel("addition_reduce2", local_size, context, queue, program);
+		parallel_assignment::Kernel variance_kernel("addition_reduce_unwrapped", local_size, context, queue, program);
 		variance_kernel.AddBufferFromBuffer(var_subt.GetRawBuffer(output));
-		output = variance_kernel.AddBuffer<unsigned int>(variance.size());
-		variance_kernel.AddLocalArg<unsigned int>();
-		variance_kernel.AddArg(myFile.GetDataSize());
+		output = variance_kernel.AddBuffer<mytype>(variance_out.size());
+		variance_kernel.AddLocalArg<mytype>();
 
 		variance_kernel.Execute();
 
-		variance_kernel.ReadBuffer(output, variance);
+		variance_kernel.ReadBuffer(output, variance_out);
 
-		std::cout << "\nVariance: " << variance[0] / 100.f << std::endl;
+		current = Clock::now();
+
+		float variance = 0;
+		for (int i = 0; i < workgroupSize; i++)
+		{
+			variance += variance_out[i];
+		}
+
+		end = Clock::now();
+
+		variance /= myFile.GetDataSize();
+
+		std::cout << "\nVariance: " << variance << std::endl;
+		std::cout << "Variance Time (ns): " << variance_kernel.GetTime() << std::endl;
+		std::cout << "Variance Time (seq) (ns): " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - current).count() << std::endl;
+
 
 		// square root and return
-		std::cout << "\nStandard Dev: " << sqrt(variance[0]) / 100.f  << std::endl;
+		std::cout << "\nStandard Dev: " << sqrt(variance) << std::endl;
 
 
 
