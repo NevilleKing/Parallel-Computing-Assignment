@@ -147,16 +147,21 @@ int main(int argc, char **argv) {
 
 		mean_kernel.ReadBuffer(output, meanOutput);
 
+		TimePoint current = Clock::now();
+
 		float total = 0;
 		for (int i = 0; i <= workgroupSize; i++)
 		{
 			total += meanOutput[i];
 		}
 
+		TimePoint end = Clock::now();
+
 		total /= myFile.GetDataSize();
 
 		std::cout << "\nMean: " << total << std::endl;
 		std::cout << "Mean Time (ns): " << mean_kernel.GetTime() << std::endl;
+		std::cout << "Mean Time (seq) (ns): " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - current).count() << std::endl;
 
 		system("pause");
 
@@ -213,9 +218,10 @@ int main(int argc, char **argv) {
 	TIMES
 
 	addition_reduce [ns]:            660224
-	addition_reduce_unwrapped [ns] :  95680
-	max =                            686304
-	max (atom) =                      97472
-	min =                            688096
-	min (atom) =                      99872
+	addition_reduce_unwrapped [ns] :  95680 (kernel) + 18286 (seq)
+	addition (atom) :                 97408
+	max :                            686304
+	max (atom) :                      97472
+	min :                            688096
+	min (atom) :                      99872
 */
