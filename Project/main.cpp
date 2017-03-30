@@ -255,6 +255,14 @@ int main(int argc, char **argv) {
 
 		selectionSort.ReadBuffer(output, sortOutput);
 
+		std::cout << "Median: " << sortOutput[sortOutput.size() / 2] << std::endl;
+		std::cout << "Lower Quartile: " << sortOutput[sortOutput.size() / 4] << std::endl;
+		std::cout << "Upper Quartile: " << sortOutput[(3 * sortOutput.size()) / 4] << std::endl;
+		std::cout << "Interquartile range: " << sortOutput[(3 * sortOutput.size()) / 4] - 
+												sortOutput[sortOutput.size() / 4] << std::endl;
+
+		std::cout << "Sorting Time [ns]: " << selectionSort.GetTime() << std::endl;
+
 #pragma endregion
 
 	}

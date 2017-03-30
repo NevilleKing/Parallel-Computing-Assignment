@@ -66,7 +66,7 @@ namespace parallel_assignment
 		_profile_time = prof_event.getProfilingInfo<CL_PROFILING_COMMAND_END>() - prof_event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
 	}
 
-	int Kernel::GetTime()
+	unsigned int Kernel::GetTime()
 	{
 		return _profile_time;
 	}

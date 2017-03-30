@@ -79,7 +79,7 @@ namespace parallel_assignment
 			_queue->enqueueReadBuffer(*_buffers[buffer_id].get()->buff, CL_TRUE, 0, _buffers[buffer_id].get()->size, &output_vector[0]);
 		}
 
-		int GetTime();
+		unsigned int GetTime();
 
 	private:
 		cl::Context* _context;
@@ -95,7 +95,7 @@ namespace parallel_assignment
 		int _local_size;
 		int _input_elements;
 
-		int _profile_time = -1;
+		unsigned int _profile_time = -1;
 	};
 
 }
