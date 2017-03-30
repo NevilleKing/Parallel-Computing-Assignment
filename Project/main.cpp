@@ -134,14 +134,44 @@ int main(int argc, char **argv) {
 
 		system("pause");
 
-		float total = parallel_assignment::RecursiveKernel<float>("addition_reduce_unwrapped", local_size, context, queue, program, myFile.GetData());
+		float total = 0;
+
+		// Below is a function which loops through the output and keeps calling the sum kernel until a single value is returned
+		// It's not used because the below implementation is faster for the current dataset size (1.8M) but there is a speedup
+		// if run on larger datasets
+		//total = parallel_assignment::RecursiveKernel<float>("addition_reduce_unwrapped", local_size, context, queue, program, myFile.GetData());
+		//total /= myFile.GetDataSize();
+
+		int workgroupSize = myFile.GetDataSize() / local_size;
+
+		std::vector<mytype> meanOutput(workgroupSize);
+
+		// Calculate mean
+		parallel_assignment::Kernel mean_kernel("addition_reduce_unwrapped", local_size, context, queue, program);
+		mean_kernel.AddBuffer(myFile.GetData(), true);
+		int output = mean_kernel.AddBuffer<mytype>(meanOutput.size());
+		mean_kernel.AddLocalArg<mytype>();
+
+		mean_kernel.Execute();
+
+		mean_kernel.ReadBuffer(output, meanOutput);
+
+		TimePoint current = Clock::now();
+
+		for (int i = 0; i < workgroupSize; i++)
+		{
+			total += meanOutput[i];
+		}
+
+		TimePoint end = Clock::now();
 
 		total /= myFile.GetDataSize();
 
 		std::cout << "\nMean: " << total << std::endl;
-		//std::cout << "Mean Time (ns): " << mean_kernel.GetTime() << std::endl;
-		//std::cout << "Mean Time (seq) (ns): " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - current).count() << std::endl;
-		/*
+		std::cout << "Mean Time (ns): " << mean_kernel.GetTime() << std::endl;
+		std::cout << "Mean Time (seq) (ns): " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - current).count() << std::endl;
+
+		
 		system("pause");
 
 		// for each number subtract mean and square result
@@ -187,7 +217,7 @@ int main(int argc, char **argv) {
 
 		// square root and return
 		std::cout << "\nStandard Dev: " << sqrt(variance) << std::endl;
-		*/
+		
 
 
 
