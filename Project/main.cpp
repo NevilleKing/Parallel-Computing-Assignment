@@ -127,9 +127,9 @@ int main(int argc, char **argv) {
 		std::cout << "Minimum Time (ns): " << min_kernel.GetTime() << std::endl;
 		std::cout << "Minimum Time (seq) (ns): " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - current).count() << std::endl;
 
-		/*std::vector<mytype> maxOutput(1);
+		std::vector<mytype> maxOutput(workgroupSize);
 
-		parallel_assignment::Kernel max_kernel("maxKernel", local_size, context, queue, program);
+		parallel_assignment::Kernel max_kernel("maximum_reduce_unwrapped", local_size, context, queue, program);
 		max_kernel.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
 		output = max_kernel.AddBuffer<mytype>(maxOutput.size());
 		max_kernel.AddLocalArg<mytype>();
@@ -138,14 +138,24 @@ int main(int argc, char **argv) {
 
 		max_kernel.ReadBuffer(output, maxOutput);
 
-		std::cout << "\nMaximum: " << maxOutput[0] / 100.f << std::endl;
-		std::cout << "Maximum Time (ns): " << max_kernel.GetTime() << std::endl;*/
+		current = Clock::now();
+
+		float maximum = maxOutput[0];
+		for (int i = 0; i < workgroupSize; i++)
+		{
+			if (maxOutput[i] > maximum) maximum = maxOutput[i];
+		}
+
+		end = Clock::now();
+
+		std::cout << "\nMaximum: " << maximum << std::endl;
+		std::cout << "Maximum Time (ns): " << max_kernel.GetTime() << std::endl;
+		std::cout << "Maximum Time (seq) (ns): " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - current).count() << std::endl;
+
 
 #pragma endregion
 
 #pragma region std_dev_kernel
-
-		system("pause");
 
 		float total = 0;
 
@@ -159,7 +169,7 @@ int main(int argc, char **argv) {
 
 		// Calculate mean
 		parallel_assignment::Kernel mean_kernel("addition_reduce_unwrapped", local_size, context, queue, program);
-		mean_kernel.AddBuffer(myFile.GetData(), true);
+		mean_kernel.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
 		output = mean_kernel.AddBuffer<mytype>(meanOutput.size());
 		mean_kernel.AddLocalArg<mytype>();
 
@@ -181,9 +191,6 @@ int main(int argc, char **argv) {
 		std::cout << "\nMean: " << total << std::endl;
 		std::cout << "Mean Time (ns): " << mean_kernel.GetTime() << std::endl;
 		std::cout << "Mean Time (seq) (ns): " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - current).count() << std::endl;
-
-		
-		system("pause");
 
 		// for each number subtract mean and square result
 		parallel_assignment::Kernel var_subt("variance_subtract", local_size, context, queue, program);

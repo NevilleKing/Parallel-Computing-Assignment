@@ -158,6 +158,39 @@ __kernel void minimum_reduce_unwrapped(__global const float* A, __global float* 
 	if (lid == 0) B[Gid] = scratch[0];
 }
 
+__kernel void maximum_reduce_unwrapped(__global const float* A, __global float* B, __local float* scratch) {
+
+	int id = get_global_id(0);
+	int lid = get_local_id(0);
+	int size = get_global_size(0);
+	int N = get_local_size(0);
+	int Gid = get_group_id(0);
+
+	int I = Gid * (N*2) + lid;
+
+	int gridSize = N*2*get_num_groups(0);
+	 
+	scratch[lid] = 0;
+
+	while (I < size) {scratch[lid] = A[I]; if (scratch[lid] < A[I+N]) scratch[lid] = A[I+N]; I += gridSize;}
+
+	barrier(CLK_LOCAL_MEM_FENCE);
+	 
+	if (N >= 128) { if (lid <64) {if (scratch[lid+64] > scratch[lid]) scratch[lid] = scratch[lid+64];}barrier(CLK_LOCAL_MEM_FENCE);} 
+
+	if (lid < 32)
+	{
+	if (N >= 64) if (scratch[lid+32] > scratch[lid]) scratch[lid] = scratch[lid+32];
+	if (N >= 32) if (scratch[lid+16] > scratch[lid]) scratch[lid] = scratch[lid+16];
+	if (N >= 16) if (scratch[lid+8] > scratch[lid]) scratch[lid] = scratch[lid+8];
+	if (N >= 8) if (scratch[lid+4] > scratch[lid]) scratch[lid] = scratch[lid+4];
+	if (N >= 4) if (scratch[lid+2] > scratch[lid]) scratch[lid] = scratch[lid+2];
+	if (N >= 2) if (scratch[lid+1] > scratch[lid]) scratch[lid] = scratch[lid+1];
+	}
+	
+	if (lid == 0) B[Gid] = scratch[0];
+}
+
 __kernel void addition_reduce2(__global const int* A, __global unsigned int* B, __local unsigned int* scratch, int dataSize)
 {
 	int id = get_global_id(0);
