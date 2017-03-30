@@ -241,6 +241,22 @@ int main(int argc, char **argv) {
 
 #pragma endregion
 
+		system("pause");
+
+#pragma region sorting
+
+		std::vector<mytype> sortOutput(myFile.GetTotalSize());
+
+		parallel_assignment::Kernel selectionSort("selection_sort", local_size, context, queue, program);
+		selectionSort.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
+		output = selectionSort.AddBuffer<mytype>(sortOutput.size());
+
+		selectionSort.Execute();
+
+		selectionSort.ReadBuffer(output, sortOutput);
+
+#pragma endregion
+
 	}
 	catch (cl::Error err) {
 		std::cerr << "ERROR: " << err.what() << ", " << getErrorString(err.err()) << std::endl;

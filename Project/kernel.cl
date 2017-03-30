@@ -229,3 +229,25 @@ __kernel void variance_subtract(__global const float* input, __global float* out
 
 	output[id] = (output[id] * output[id]);
 }
+
+
+// selection sort - ref http://www.bealto.com/gpu-sorting_parallel-selection.html
+__kernel void selection_sort(__global const float *A, __global float *B)
+{ 
+	int id = get_global_id(0);
+	int N = get_global_size(0);
+
+	float ikey = A[id];
+
+	// loop through all other data points to find new position of current element
+	int pos = 0;
+	for	(int j = 0; j < N; j++)
+	{
+		float jkey = A[j];
+		bool smaller = (jkey < ikey) || (jkey == ikey && j < id);
+		// calculate new position
+		pos += (smaller)?1:0;
+	}
+	// place in the new position
+	B[pos] = ikey;
+}
