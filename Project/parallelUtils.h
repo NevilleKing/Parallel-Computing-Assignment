@@ -6,12 +6,16 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <chrono>
 
 #ifdef __APPLE__
 #include <OpenCL/cl.hpp>
 #else
 #include <CL/cl.hpp>
 #endif
+
+typedef std::chrono::high_resolution_clock Clock;
+typedef std::chrono::high_resolution_clock::time_point TimePoint;
 
 namespace parallel_assignment
 {
@@ -46,13 +50,15 @@ namespace parallel_assignment
 
 		std::vector<F> output;
 
+		float timeTaken = 0.f;
+
 		while (workgroupSize > 1)
 		{			
 			parallel_assignment::Kernel myKernel("addition_reduce_unwrapped", local_size, context, queue, program);
 			if (output.size() == 0)
 			{
 				myKernel.AddBuffer(data, true);
-				workgroupSize = (data.size() / local_size) / 2;
+				workgroupSize = (data.size() / local_size) / 2; // /2 because the optimized kernel reduces the size by half
 			}
 			else
 			{
@@ -70,9 +76,12 @@ namespace parallel_assignment
 			myKernel.ReadBuffer(outputNum, output);
 
 			PadVector(output, local_size);
+
+			timeTaken += myKernel.GetTime();
 		}
 
 		std::cout << "Output :" << output << std::endl;
+		std::cout << "Time taken [ns]: " << timeTaken << std::endl;
 
 		return output[0];
 	}
