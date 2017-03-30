@@ -99,19 +99,25 @@ int main(int argc, char **argv) {
 
 #pragma region min_max_kernels
 
+		// we divide by 2 because the kernel is optimized to add values whilst copying
+		// from global to local memory
 		int workgroupSize = (myFile.GetDataSize() / local_size) / 2;
 
 		std::vector<mytype> minOutput(workgroupSize);
 
 		// create an instance of the kernel class to run the min stat in parallel
 		parallel_assignment::Kernel min_kernel("minimum_reduce_unwrapped", local_size, context, queue, program);
-		min_kernel.AddBuffer(myFile.GetData(), true);
-		int output = min_kernel.AddBuffer<mytype>(minOutput.size());
-		min_kernel.AddLocalArg<mytype>();
+		min_kernel.AddBuffer(myFile.GetData(), true); // pass in the data to the buffer
+		int output = min_kernel.AddBuffer<mytype>(minOutput.size()); // create an output buffer
+		min_kernel.AddLocalArg<mytype>(); // add scratch
 
 		min_kernel.Execute();
 		
-		min_kernel.ReadBuffer(output, minOutput);
+		min_kernel.ReadBuffer(output, minOutput); // read the output buffer
+
+		// The final calculation is done in the host code as it is not worth calling the
+		// kernel again. With a larger dataset it might become better to do this.
+		// For ~7K elements it doesn't make too much of a difference.
 
 		TimePoint current = Clock::now();
 
@@ -247,6 +253,7 @@ int main(int argc, char **argv) {
 
 		std::vector<mytype> sortOutput(myFile.GetTotalSize());
 
+		// use selection sort to sort the data to perform median based stats
 		parallel_assignment::Kernel selectionSort("selection_sort", local_size, context, queue, program);
 		selectionSort.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
 		output = selectionSort.AddBuffer<mytype>(sortOutput.size());

@@ -8,7 +8,7 @@
 
 namespace parallel_assignment
 {
-
+	// Class to handle read in from file
 	class ReadFile
 	{
 	public:

@@ -19,11 +19,13 @@ namespace parallel_assignment
 		Load(filename, 0);
 	}
 
+	// Main function to load the data from the file
 	void ReadFile::Load(std::string filename, size_t localSize)
 	{
 		// create the data vector
 		_data = new std::vector<float>;
 
+		// Use ifstream - only takes ~1.1 secs on release for the full dataset
 		std::ifstream thefile;
 		thefile.open(filename, std::ios::in);
 
@@ -46,7 +48,7 @@ namespace parallel_assignment
 		_dataSize = _data->size();
 
 
-		// pad the vector if needed
+		// pad the vector up to the local size if needed
 		if (localSize != 0)
 		{
 			_paddingSize = parallel_assignment::PadVector<float>(*_data, localSize);
@@ -73,6 +75,7 @@ namespace parallel_assignment
 		return _dataSize + _paddingSize;
 	}
 
+	// Counts the number of spaces on each line and takes only the final value (the temperature)
 	float ReadFile::ParseLine(std::string line)
 	{
 		int numSpaces = 0;

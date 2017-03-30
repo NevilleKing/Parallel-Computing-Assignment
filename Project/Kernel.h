@@ -36,14 +36,18 @@ namespace parallel_assignment
 		Buffer(const Buffer& obj);
 	};
 
+	// Class to make calls to OpenCL kernels
 	class Kernel
 	{
 	public:
+		// Create the kernel by passing in lots of variables for intial setup
 		Kernel(std::string kernel_name, int local_size, cl::Context& context, cl::CommandQueue& queue, cl::Program& program);
 		~Kernel() {};
 
+		// Add a buffer using a vector as an input
 		int AddBuffer(const std::vector<float>& input, bool readOnly = true);
 
+		// Add a buffer which is empty (passing number of elements)
 		template<typename F>
 		int AddBuffer(int numElements)
 		{
@@ -60,25 +64,34 @@ namespace parallel_assignment
 			return _buffers.size() - 1;
 		}
 
+		// Add buffer using pointer from previous kernel call
 		int AddBufferFromBuffer(const std::shared_ptr<Buffer> prevBuffer);
+		
+		// add a single argument
 		void AddArg(float arg);
 
+		// Add a local buffer
 		template<typename G>
 		void AddLocalArg()
 		{
 			_kernel.setArg(_currentArgument++, cl::Local(_local_size * sizeof(G)));
 		}
 
+		// Get the buffer so it can be passed into another kernel
+		// (This cuts down on memory transfer)
 		const std::shared_ptr<Buffer> GetRawBuffer(int buffer_id);
 
+		// Execute the kernel
 		void Execute();
 
+		// Read the value from the buffer
 		template<typename T>
 		void ReadBuffer(int buffer_id, std::vector<T>& output_vector)
 		{
 			_queue->enqueueReadBuffer(*_buffers[buffer_id].get()->buff, CL_TRUE, 0, _buffers[buffer_id].get()->size, &output_vector[0]);
 		}
 
+		// get the kernel execution time in nanoseconds
 		unsigned int GetTime();
 
 	private:

@@ -19,6 +19,7 @@ typedef std::chrono::high_resolution_clock::time_point TimePoint;
 
 namespace parallel_assignment
 {
+	// Add padding to the input vector (this makes it more effiecient by resizing to a multiple of the local size)
 	template <typename T>
 	int PadVector(std::vector<T>& data, int localSize)
 	{
@@ -38,6 +39,10 @@ namespace parallel_assignment
 		return 0;
 	}
 
+	// Function the keeps calling the same kernel for reduction
+	// The number of elements decreases to a single value
+	// This is inefficient on the data size of 1.8M elements but works
+	// out better larger datasets
 	template <typename F>
 	F RecursiveKernel(std::string kernel_name,
 					  int local_size, 
@@ -52,10 +57,12 @@ namespace parallel_assignment
 
 		float timeTaken = 0.f;
 
+		// while we have more than 1 element
 		while (workgroupSize > 1)
 		{			
+			// run the kernel
 			parallel_assignment::Kernel myKernel("addition_reduce_unwrapped", local_size, context, queue, program);
-			if (output.size() == 0)
+			if (output.size() == 0) // on the first iteration, copy the data passed in
 			{
 				myKernel.AddBuffer(data, true);
 				workgroupSize = (data.size() / local_size) / 2; // /2 because the optimized kernel reduces the size by half
@@ -72,10 +79,10 @@ namespace parallel_assignment
 			myKernel.Execute();
 
 			output.clear();
-			output.resize(workgroupSize);
+			output.resize(workgroupSize); // resize the output to the new WG size
 			myKernel.ReadBuffer(outputNum, output);
 
-			PadVector(output, local_size);
+			PadVector(output, local_size); // it now needs extra padding
 
 			timeTaken += myKernel.GetTime();
 		}
