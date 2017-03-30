@@ -96,13 +96,15 @@ int main(int argc, char **argv) {
 		std::cout << "Read & Parse (s): " << timeTaken / 1000.f << std::endl;
 
 		//host - output
-/*
+
 #pragma region min_max_kernels
 
-		std::vector<mytype> minOutput(1);
+		int workgroupSize = (myFile.GetDataSize() / local_size) / 2;
+
+		std::vector<mytype> minOutput(workgroupSize);
 
 		// create an instance of the kernel class to run the min stat in parallel
-		parallel_assignment::Kernel min_kernel("minKernel", local_size, context, queue, program);
+		parallel_assignment::Kernel min_kernel("minimum_reduce_unwrapped", local_size, context, queue, program);
 		min_kernel.AddBuffer(myFile.GetData(), true);
 		int output = min_kernel.AddBuffer<mytype>(minOutput.size());
 		min_kernel.AddLocalArg<mytype>();
@@ -111,10 +113,21 @@ int main(int argc, char **argv) {
 		
 		min_kernel.ReadBuffer(output, minOutput);
 
-		std::cout << "\nMinimum: " << minOutput[0] / 100.f << std::endl;
-		std::cout << "Minimum Time (ns): " << min_kernel.GetTime() << std::endl;
+		TimePoint current = Clock::now();
 
-		std::vector<mytype> maxOutput(1);
+		float minimum = minOutput[0];
+		for (int i = 0; i < workgroupSize; i++)
+		{
+			if (minOutput[i] < minimum) minimum = minOutput[i];
+		}
+
+		TimePoint end = Clock::now();
+
+		std::cout << "\nMinimum: " << minimum << std::endl;
+		std::cout << "Minimum Time (ns): " << min_kernel.GetTime() << std::endl;
+		std::cout << "Minimum Time (seq) (ns): " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - current).count() << std::endl;
+
+		/*std::vector<mytype> maxOutput(1);
 
 		parallel_assignment::Kernel max_kernel("maxKernel", local_size, context, queue, program);
 		max_kernel.AddBufferFromBuffer(min_kernel.GetRawBuffer(0));
@@ -126,10 +139,10 @@ int main(int argc, char **argv) {
 		max_kernel.ReadBuffer(output, maxOutput);
 
 		std::cout << "\nMaximum: " << maxOutput[0] / 100.f << std::endl;
-		std::cout << "Maximum Time (ns): " << max_kernel.GetTime() << std::endl;
+		std::cout << "Maximum Time (ns): " << max_kernel.GetTime() << std::endl;*/
 
 #pragma endregion
-*/
+
 #pragma region std_dev_kernel
 
 		system("pause");
@@ -142,28 +155,26 @@ int main(int argc, char **argv) {
 		//total = parallel_assignment::RecursiveKernel<float>("addition_reduce_unwrapped", local_size, context, queue, program, myFile.GetData());
 		//total /= myFile.GetDataSize();
 
-		int workgroupSize = myFile.GetDataSize() / local_size;
-
 		std::vector<mytype> meanOutput(workgroupSize);
 
 		// Calculate mean
 		parallel_assignment::Kernel mean_kernel("addition_reduce_unwrapped", local_size, context, queue, program);
 		mean_kernel.AddBuffer(myFile.GetData(), true);
-		int output = mean_kernel.AddBuffer<mytype>(meanOutput.size());
+		output = mean_kernel.AddBuffer<mytype>(meanOutput.size());
 		mean_kernel.AddLocalArg<mytype>();
 
 		mean_kernel.Execute();
 
 		mean_kernel.ReadBuffer(output, meanOutput);
 
-		TimePoint current = Clock::now();
+		current = Clock::now();
 
 		for (int i = 0; i < workgroupSize; i++)
 		{
 			total += meanOutput[i];
 		}
 
-		TimePoint end = Clock::now();
+		end = Clock::now();
 
 		total /= myFile.GetDataSize();
 
