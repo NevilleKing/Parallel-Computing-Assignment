@@ -178,6 +178,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Kernel.h" />
+    <ClInclude Include="parallelUtils.h" />
     <ClInclude Include="ReadFile.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>

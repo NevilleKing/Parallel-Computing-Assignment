@@ -1,7 +1,7 @@
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #define __CL_ENABLE_EXCEPTIONS
 
-#define ASSIGNMENT_FILENAME "temp_lincolnshire_short.txt"
+#define ASSIGNMENT_FILENAME "temp_lincolnshire.txt"
 #define LOCAL_SIZE 128
 
 #include <iostream>

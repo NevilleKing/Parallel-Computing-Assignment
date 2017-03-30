@@ -4,6 +4,7 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include "parallelUtils.h"
 
 namespace parallel_assignment
 {

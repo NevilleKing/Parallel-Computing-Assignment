@@ -49,18 +49,7 @@ namespace parallel_assignment
 		// pad the vector if needed
 		if (localSize != 0)
 		{
-			size_t padding_size = _data->size() % localSize;
-
-			//if the input vector is not a multiple of the local_size
-			//insert additional neutral elements (0 for addition) so that the total will not be affected
-			if (padding_size) {
-				//create an extra vector with neutral values
-				std::vector<int> A_ext(localSize - padding_size, 0);
-				//append that extra vector to our input
-				_data->insert(_data->end(), A_ext.begin(), A_ext.end());
-
-				_paddingSize = A_ext.size();
-			}
+			_paddingSize = parallel_assignment::PadVector<float>(*_data, localSize);
 		}
 	}
 
