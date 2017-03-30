@@ -19,6 +19,7 @@
 
 #include "ReadFile.h"
 #include "Kernel.h"
+#include "parallelUtils.h"
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef std::chrono::high_resolution_clock::time_point TimePoint;
@@ -133,36 +134,14 @@ int main(int argc, char **argv) {
 
 		system("pause");
 
-		int workgroupSize = myFile.GetDataSize() / local_size;
-
-		std::vector<mytype> meanOutput(workgroupSize);
-
-		// Calculate mean
-		parallel_assignment::Kernel mean_kernel("addition_reduce_unwrapped", local_size, context, queue, program);
-		mean_kernel.AddBuffer(myFile.GetData(), true);
-		int output = mean_kernel.AddBuffer<mytype>(meanOutput.size());
-		mean_kernel.AddLocalArg<mytype>();
-
-		mean_kernel.Execute();
-
-		mean_kernel.ReadBuffer(output, meanOutput);
-
-		TimePoint current = Clock::now();
-
-		float total = 0;
-		for (int i = 0; i < workgroupSize; i++)
-		{
-			total += meanOutput[i];
-		}
-
-		TimePoint end = Clock::now();
+		float total = parallel_assignment::RecursiveKernel<float>("addition_reduce_unwrapped", local_size, context, queue, program, myFile.GetData());
 
 		total /= myFile.GetDataSize();
 
 		std::cout << "\nMean: " << total << std::endl;
-		std::cout << "Mean Time (ns): " << mean_kernel.GetTime() << std::endl;
-		std::cout << "Mean Time (seq) (ns): " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - current).count() << std::endl;
-
+		//std::cout << "Mean Time (ns): " << mean_kernel.GetTime() << std::endl;
+		//std::cout << "Mean Time (seq) (ns): " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - current).count() << std::endl;
+		/*
 		system("pause");
 
 		// for each number subtract mean and square result
@@ -208,7 +187,7 @@ int main(int argc, char **argv) {
 
 		// square root and return
 		std::cout << "\nStandard Dev: " << sqrt(variance) << std::endl;
-
+		*/
 
 
 
