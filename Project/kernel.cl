@@ -75,21 +75,21 @@ __kernel void addition_reduce(__global const int* A, __global unsigned int* B, _
 	}
 }
 
-//Calculate Total
+//Calculate Total Reduction Kernel
 __kernel void addition_reduce_unwrapped(__global const float* A, __global float* B, __local float* scratch) {
 
 	///Refrence: http://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_website/projects/reduction/doc/reduction.pdf
 
-	//Block size must always be of power of 2! and <= 128
+	// Best to use local size of 128. Doesn''t work > 128
 	int id = get_global_id(0);
 	int lid = get_local_id(0);
 	int size = get_global_size(0);
-	//get workgroup size
+	// workgroup size
 	int N = get_local_size(0);
-	//get group index postion
+	//get group index
 	int Gid = get_group_id(0);
 
-	//Halve the number of blocks and replace single load
+	//Halve the number of blocks (*2) and replace single load
 	int I = Gid * (N*2) + lid;
 
 	//Gridsize to control loop to maintain coalescing
@@ -97,20 +97,21 @@ __kernel void addition_reduce_unwrapped(__global const float* A, __global float*
 	 
 	scratch[lid] = 0;
 
-	//Mantains coalescing by keeping values close together in scratch using gridsize
-	//Fist Sequential reduction during read into local scratch to save time
+	// Data is coalesced by using the gridsize
+	// An add is completed whilst the data is being copied to scratch (first step of reduction)
 	while (I < size) {scratch[lid] = (A[I] + A[I+N]); I += gridSize;}
 
 	barrier(CLK_LOCAL_MEM_FENCE);//wait for all local threads to finish copying from global to local memory
 	 
-	//cascading algorithm that does parrallel reduction on remaning workgroup items based on the workgroup size
+	//cascading algorithm. completes reduction on remaning workgroup items based on the workgroup size
 
-	//unrolled all the previous loops!
+	// no loops - unwrapped the loops because they slow the kernel down
 
-	//Checks based on Workgroup size and local Id 
+	// Complete a copy if within the workgroup boundaries
 	if (N >= 128) { if (lid <64) {scratch[lid] += scratch[lid + 64];}barrier(CLK_LOCAL_MEM_FENCE);} 
 
-	//This saves work on useless values and only executes if it needs to
+	// On normal reduction, when the lid gets down to 32, most threads are inactive
+	// These are only executed if needed
 	if (lid < 32)
 	{
 	if (N >= 64) scratch[lid] += scratch[lid+32];
@@ -122,6 +123,8 @@ __kernel void addition_reduce_unwrapped(__global const float* A, __global float*
 	}
 	
 	//copy the cache to output array for every workgroup total value
+	// There will need to be some host code to add the final values or the kernel will need to be
+	// called again
 	if (lid == 0) B[Gid] = scratch[0];
 }
 
